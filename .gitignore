@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# 插件运行时落在本目录时产生的数据文件
+prompt-library.json
+prompt-library.backup.json
+*.tmp

@@ -1,0 +1,17 @@
+# ============================================================================
+# dsh-prompt-library —— DSH bundle patch
+# ============================================================================
+# 本插件同时有两半：
+#   - 宿主半（lib/index.js）：提示词库存成 JSON 文件，提供 /prompt-library 回环接口；
+#   - 浏览器半（client/client.js）：输入框工具行加 ▤ 按钮与取用浮层，另有设置页。
+# 因此这里只需要一行 insert。
+#
+# 安装（本地开发，不发布）：
+#   plugin_manager install_bundle  target = link:D:/DeepSeek/dsh-prompt-library
+# 等价 CLI：
+#   dsh plugin --profile desktop add link:D:/DeepSeek/dsh-prompt-library
+# ============================================================================
+
+- insert:
+    - id: prompt-library
+      name: dsh-prompt-library

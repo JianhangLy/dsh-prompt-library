@@ -1,0 +1,45 @@
+{
+  "name": "dsh-prompt-library",
+  "version": "0.3.0",
+  "description": "DSH Web GUI 的「提示词库」插件：保存常用提示词与模板，在输入框旁点 ▤ 取用，支持分类筛选、{{变量}}、追加插入、置顶与整库导入导出，并内置 13 套分类模板。",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "client",
+    "locale/*.json",
+    "icon.svg",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "prompt",
+    "webui"
+  ],
+  "author": "JianhangLy",
+  "homepage": "https://github.com/JianhangLy/dsh-prompt-library#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JianhangLy/dsh-prompt-library.git"
+  },
+  "license": "MIT"
+}

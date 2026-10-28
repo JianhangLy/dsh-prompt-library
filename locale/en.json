@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Prompt library",
+    "description": "Save reusable prompts and templates, insert them beside the composer with template variables, appending, pinning, and per-machine storage."
+  }
+}
