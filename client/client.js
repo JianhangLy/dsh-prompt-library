@@ -1850,10 +1850,11 @@ window.__ModuleLoader__.load({
 
         // Alt+P：直接借用已挂载的 ▤ 按钮当锚点，位置和聚焦会话都对得上；
         // 没有按钮可达（比如纯设置页）就什么都不做。
+        // macOS 上 Option 会把 event.key 变成 'π'，所以先按物理键位 event.code 匹配。
         ctx.effect(() => {
           function onKeyDown(event) {
             if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-            if (event.key !== 'p' && event.key !== 'P') return
+            if (event.code !== 'KeyP' && event.key !== 'p' && event.key !== 'P') return
             event.preventDefault()
             if (store.open) {
               closePicker()
