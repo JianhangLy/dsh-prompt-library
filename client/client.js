@@ -16,6 +16,11 @@ window.__ModuleLoader__.load({
     const React = require('react')
     const h = React.createElement
 
+    // chip 上的「内置 · 」前缀纯属噪音；只影响显示，筛选键仍是原名。
+    function shortGroupName(name) {
+      return String(name).replace(/^内置\s*[·・]\s*/, '').replace(/^builtin\s*[·・]\s*/i, '')
+    }
+
     const NS = 'dsh-prompt-library'
     const ENDPOINT = '/prompt-library'
     const ENDPOINT_USED = ENDPOINT + '/used'
@@ -394,15 +399,17 @@ window.__ModuleLoader__.load({
       '#pl-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}',
       '#pl-dialog .pl-danger{color:var(--dsw-alias-state-error-primary)}',
       '.pl-search:focus{border-color:rgba(127,127,127,.55) !important}',
-      '.pl-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 3px}',
+      // 分类是导航控件：横滚会把选项藏起来、常驻一条滚动条，改为换行全展示。
+      '.pl-chips{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 3px}',
+      '.pl-chip-count{font-size:10px;opacity:.6;margin-left:4px;font-variant-numeric:tabular-nums}',
       // 浮层渲染在 [data-composer-card] 内，皮肤 patches 会强刷卡内所有 button
       // （蓝紫渐变底 + 亮边 + 光晕，全部 !important）。因此这里用 #pl-pop 提权到 ID 级，
       // 逐项把填充压回透明；色值仍是上一轮那套中性灰，不另起一套。
       '#pl-pop .pl-chip,#pl-settings .pl-chip{flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 10px;border:1px solid rgba(127,127,127,.32) !important;border-radius:999px !important;background:transparent !important;background-image:none !important;box-shadow:none !important;text-shadow:none !important;color:var(--dsw-alias-label-secondary) !important;font:inherit;font-size:11px;line-height:16px;cursor:pointer;appearance:none}',
       '#pl-pop .pl-chip:hover,#pl-settings .pl-chip:hover{border-color:rgba(127,127,127,.48) !important;background-color:rgba(127,127,127,.10) !important;background-image:none !important;box-shadow:none !important;color:var(--dsw-alias-label-primary) !important}',
       '#pl-pop .pl-chip.pl-chip-active,#pl-settings .pl-chip.pl-chip-active{background:rgba(127,127,127,.18) !important;background-image:none !important;border-color:rgba(127,127,127,.52) !important;box-shadow:none !important;color:var(--dsw-alias-label-primary) !important}',
-      '.pl-list{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:2px}',
-      '#pl-pop .pl-item{display:flex;flex-direction:column;gap:3px;width:100%;padding:7px 8px;border:0 !important;border-radius:8px !important;background:transparent !important;background-image:none !important;box-shadow:none !important;text-shadow:none !important;color:inherit !important;text-align:left;cursor:pointer;font:inherit;appearance:none}',
+      '.pl-list{flex:1;overflow-y:auto;overflow-x:clip;padding:6px;display:flex;flex-direction:column;gap:2px}',
+      '#pl-pop .pl-item{display:flex;flex-direction:column;gap:3px;box-sizing:border-box;width:100%;padding:7px 8px;border:0 !important;border-radius:8px !important;background:transparent !important;background-image:none !important;box-shadow:none !important;text-shadow:none !important;color:inherit !important;text-align:left;cursor:pointer;font:inherit;appearance:none}',
       '#pl-pop .pl-item:hover{background:rgba(127,127,127,.10) !important;background-image:none !important;box-shadow:none !important}',
       '#pl-pop .pl-item.pl-item-active{background:rgba(127,127,127,.16) !important;background-image:none !important;box-shadow:none !important}',
       '.pl-item-head{display:flex;align-items:center;gap:8px;min-width:0}',
@@ -882,7 +889,13 @@ window.__ModuleLoader__.load({
         const container = listRef.current
         if (!container) return
         const node = container.querySelector('[data-active="true"]')
-        if (node && typeof node.scrollIntoView === 'function') node.scrollIntoView({ block: 'nearest' })
+        if (!node) return
+        // 只动这个列表自己的纵向滚动。scrollIntoView 会连带 inline 轴和所有祖先
+        // 滚动容器，这正是「移动选中项时界面横向漂一下」的来源。
+        const box = container.getBoundingClientRect()
+        const target = node.getBoundingClientRect()
+        if (target.top < box.top) container.scrollTop -= box.top - target.top
+        else if (target.bottom > box.bottom) container.scrollTop += target.bottom - box.bottom
       }, [active, state.open, query, group])
 
       if (!state.open || state.owner !== owner) return null
@@ -897,7 +910,7 @@ window.__ModuleLoader__.load({
         .filter((chip) => chip.key !== '' || chip.count > 0)
         .concat(groups.map((name) => ({
           key: name,
-          label: name,
+          label: shortGroupName(name),
           count: state.prompts.filter((prompt) => prompt.group === name).length,
         })))
       const list = selectPrompts(state.prompts, activeGroup, query)
@@ -1161,7 +1174,7 @@ window.__ModuleLoader__.load({
               setGroup(chip.key)
               setActive(0)
             },
-          }, chip.label + ' · ' + chip.count)))),
+          }, chip.label, h('span', { className: 'pl-chip-count' }, chip.count))))),
         content,
         h('div', { className: 'pl-pop-foot' },
           h('div', null, note !== '' ? note : t('shownHint').replace('{n}', String(list.length)).replace('{m}', String(state.prompts.length))),
@@ -1440,7 +1453,7 @@ window.__ModuleLoader__.load({
       const chips = [{ key: null, label: t('allPrompts'), count: state.prompts.length }]
       const ungrouped = state.prompts.filter((item) => !item.group).length
       if (ungrouped > 0) chips.push({ key: '', label: t('ungrouped'), count: ungrouped })
-      for (const entry of groupList) chips.push({ key: entry.group, label: entry.group, count: entry.count })
+      for (const entry of groupList) chips.push({ key: entry.group, label: shortGroupName(entry.group), count: entry.count })
 
       // 检索结果；正在编辑的条目即使不匹配也保留，避免编辑框被抽走。
       const visible = selectPrompts(state.prompts, groupKey, query)
@@ -1733,7 +1746,7 @@ window.__ModuleLoader__.load({
             type: 'button',
             className: 'pl-chip' + (groupKey === chip.key ? ' pl-chip-active' : ''),
             onClick: () => setGroup(chip.key),
-          }, chip.label + ' · ' + chip.count))),
+          }, chip.label, h('span', { className: 'pl-chip-count' }, chip.count)))),
           rows))
     }
 
